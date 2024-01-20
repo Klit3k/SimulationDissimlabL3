@@ -4,6 +4,7 @@ import dissimlab.random.RNGenerator;
 import dissimlab.simcore.BasicSimEvent;
 import dissimlab.simcore.SimControlException;
 import pl.edu.wat.mspw.CombatSystem;
+import pl.edu.wat.mspw.Main;
 import pl.edu.wat.mspw.model.CombatUnit;
 import pl.edu.wat.mspw.util.Helper;
 
@@ -43,11 +44,13 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
                 else
                     enemyUnit.setEquipmentQuantity(0);
 
-                hitLog();
 
                 //Wyniszczenie
-                if (combatUnit.getEquipmentQuantity() == 0 || enemyUnit.getEquipmentQuantity() == 0)
-                    stopSimulation();
+                if (enemyUnit.getEquipmentQuantity() == 0)
+                    enemyUnit.setAlive(false);
+                hitLog();
+
+
             } else {
                 nonHitLog();
             }
@@ -56,12 +59,14 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
 
     private void drawHitGraphics() {
         try {
-            Thread.sleep(200);
-            combatUnit.getBattlefield()
-                    .hit(
-                            enemyUnit.getId().hashCode(),
-                            combatUnit.getPower()
-                    );
+            Thread.sleep(Main.PAUSE_TIME);
+
+                combatUnit.getBattlefield()
+                        .hit(
+                                enemyUnit.getId().hashCode(),
+                                combatUnit.getPower()
+                        );
+
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -69,7 +74,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
 
     @Override
     protected void stateChange() throws SimControlException {
-        if (combatUnit.getFocusedUnit() != null) {
+        if (enemyUnit != null && enemyUnit.isAlive()) {
             if (helper.isInRange(combatUnit, combatUnit.getFocusedUnit())) {
                 if (combatUnit.isAlive() && combatUnit.getEquipmentQuantity() > 0) {
                     simulateAttack(helper.computeDistance(combatUnit, enemyUnit));

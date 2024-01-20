@@ -2,6 +2,7 @@ package pl.edu.wat.mspw.event;
 
 import dissimlab.simcore.BasicSimEvent;
 import dissimlab.simcore.SimControlException;
+import pl.edu.wat.mspw.Main;
 import pl.edu.wat.mspw.enums.ConflictSide;
 import pl.edu.wat.mspw.enums.MovementDirection;
 import pl.edu.wat.mspw.model.CombatUnit;
@@ -31,7 +32,7 @@ public class MovementEvent extends BasicSimEvent<CombatUnit, Object> {
     }
     private void drawMoveGraphic(int x, int y) {
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(Main.PAUSE_TIME);
                     combatUnit.getBattlefield()
                             .moveUnit(
                                     combatUnit.getId().hashCode(),
@@ -90,7 +91,7 @@ public class MovementEvent extends BasicSimEvent<CombatUnit, Object> {
     }
 
     public void updateLocation() throws SimControlException {
-        if (!combatUnit.getRoute().isEmpty()) {
+        if (!combatUnit.getRoute().isEmpty() ) {
             int startX = combatUnit.getX(), startY = combatUnit.getY();
             MovementDirection nextDirection = combatUnit.getRoute().getFirst();
             combatUnit.getRoute().removeFirst();
@@ -134,7 +135,6 @@ public class MovementEvent extends BasicSimEvent<CombatUnit, Object> {
                 combatUnit.getCombatSystem().getCombatUnitsBlue().isEmpty()) {
             this.stopSimulation();
         }
-
     }
 
 

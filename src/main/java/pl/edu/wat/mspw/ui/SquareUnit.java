@@ -21,6 +21,6 @@ public class SquareUnit {
         this.side = side;
         this.name = name;
         this.equipmentCount = equipmentCount;
-        this.range = range;
+        this.range = (int) (range*0.8);
     }
 }
