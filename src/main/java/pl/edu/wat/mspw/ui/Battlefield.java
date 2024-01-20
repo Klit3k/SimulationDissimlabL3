@@ -1,13 +1,10 @@
 package pl.edu.wat.mspw.ui;
 
-import lombok.Getter;
-import lombok.Setter;
 import pl.edu.wat.mspw.enums.ConflictSide;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Battlefield extends JPanel {
@@ -27,6 +24,7 @@ public class Battlefield extends JPanel {
         this.trailColors = new Color[gridSize][gridSize]; // Inicjalizacja siatki śladów
 
     }
+
     public void changeGridSize(int change) {
         int newGridSize = gridSize + change;
 
@@ -51,6 +49,7 @@ public class Battlefield extends JPanel {
             repaint();
         }
     }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -114,7 +113,7 @@ public class Battlefield extends JPanel {
         int centerY = marginY + unit.getY() * squareSize + squareSize / 2;
 
         // Oblicz promień okręgu zasięgu
-        int rangeRadius = (int) ((unit.getRange() / (double) squareSideLength) * squareSize);
+        int rangeRadius = (int) Math.floor(((unit.getRange() / (double) squareSideLength) * squareSize)*0.8);
 
         // Ustaw kolor wypełnienia dla okręgu zasięgu (delikatniejszy kolor)
         Color fillColor = new Color(
@@ -124,16 +123,17 @@ public class Battlefield extends JPanel {
         g2d.setColor(fillColor);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.2f)); // ustaw niższą przezroczystość dla wypełnienia
 
-        // Rysuj wypełniony okrąg zasięgu
-        g2d.fillOval(centerX - rangeRadius, centerY - rangeRadius, 2 * rangeRadius, 2 * rangeRadius);
+        if(unit.getEquipmentCount() != 0) {
+            // Rysuj wypełniony okrąg zasięgu
+             g2d.fillOval(centerX - rangeRadius, centerY - rangeRadius, 2 * rangeRadius, 2 * rangeRadius);
 
-        // Ustaw kolor obrysu dla okręgu zasięgu (mocniejszy kolor)
-        g2d.setColor(fillColor.darker());
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f)); // ustaw przezroczystość dla obrysu
+            // Ustaw kolor obrysu dla okręgu zasięgu (mocniejszy kolor)
+            g2d.setColor(fillColor.darker());
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f)); // ustaw przezroczystość dla obrysu
 
-        // Rysuj obrys okręgu zasięgu
-        g2d.drawOval(centerX - rangeRadius, centerY - rangeRadius, 2 * rangeRadius, 2 * rangeRadius);
-
+            // Rysuj obrys okręgu zasięgu
+            g2d.drawOval(centerX - rangeRadius, centerY - rangeRadius, 2 * rangeRadius, 2 * rangeRadius);
+        }
         //Rysuj jednostek
         int x = marginX + unit.getX() * squareSize;
         int y = marginY + unit.getY() * squareSize;
@@ -146,13 +146,20 @@ public class Battlefield extends JPanel {
 
         // Rysowanie nazwy jednostki wyśrodkowanej w kwadracie
 //        g.drawString(unitText, x + (squareSize - textWidth) / 2, y + (squareSize - textHeight) / 2 + metrics.getAscent());
-        drawCenteredString(g, unitText, new Rectangle(
-                x + (squareSize - textWidth) / 2,
-                        y + (squareSize - textHeight) / 2 + metrics.getAscent(),
-                        textWidth,
-                        squareSize - textHeight),
-                new Font("Arial", Font.BOLD, 12), Color.WHITE, Color.BLACK);
-
+        if (unit.getSide().equals(ConflictSide.RED))
+            drawCenteredString(g, unitText, new Rectangle(
+                            x + (squareSize - textWidth) / 2,
+                            y + (squareSize - textHeight) / 2 + metrics.getAscent(),
+                            textWidth,
+                            squareSize - textHeight),
+                    new Font("Arial", Font.BOLD, 12), Color.WHITE, Color.RED);
+        else
+            drawCenteredString(g, unitText, new Rectangle(
+                            x + (squareSize - textWidth) / 2,
+                            y + (squareSize - textHeight) / 2 + metrics.getAscent(),
+                            textWidth,
+                            squareSize - textHeight),
+                    new Font("Arial", Font.BOLD, 12), Color.WHITE, Color.BLUE);
         g2d.dispose(); // Zwalnia zasoby Graphics2D
 
     }
@@ -170,11 +177,11 @@ public class Battlefield extends JPanel {
 
 
                 // Jeśli jednostka się przemieściła, ustaw ślad
-                if ((oldX != newX || oldY != newY) && !isOtherUnitOnPosition(unit.getId(),newX, newY)) {
+                if ((oldX != newX || oldY != newY) && !isOtherUnitOnPosition(unit.getId(), newX, newY)) {
 
-                        Color baseColor = unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE;
-                        Color trailColor = makeTrailColor(baseColor); // Metoda do tworzenia koloru śladu
-                        trailColors[oldX][oldY] = trailColor;
+                    Color baseColor = unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE;
+                    Color trailColor = makeTrailColor(baseColor); // Metoda do tworzenia koloru śladu
+                    trailColors[oldX][oldY] = trailColor;
 
                 }
 
@@ -186,6 +193,7 @@ public class Battlefield extends JPanel {
             }
         }
     }
+
     private boolean isOtherUnitOnPosition(int id, int x, int y) {
         for (SquareUnit unit : squareUnits) {
             if (unit.getX() == x && unit.getY() == y && unit.getId() != id) {
@@ -260,12 +268,16 @@ public class Battlefield extends JPanel {
     public void hit(int unitId, int power) {
         for (SquareUnit unit : squareUnits) {
             if (unit.getId() == unitId) {
+
                 unit.setEquipmentCount(
-                        unit.getEquipmentCount()-power
+                        unit.getEquipmentCount() - power
                 );
+
+                repaint();
             }
         }
     }
+
     // Metoda do dodawania jednostek wojskowych
     public void addMilitaryUnit(SquareUnit unit) {
         if (unit != null) {
@@ -274,6 +286,7 @@ public class Battlefield extends JPanel {
             repaint();
         }
     }
+
     private void drawCenteredString(Graphics g, String text, Rectangle rect, Font font, Color textColor, Color shadowColor) {
         // Ustawienie czcionki i koloru
         g.setFont(font);
@@ -291,65 +304,66 @@ public class Battlefield extends JPanel {
         g.setColor(textColor);
         g.drawString(text, x, y);
     }
+
     public static void main(String[] args) {
-            JFrame frame = new JFrame();
-            int gridSize = 50;
-            int squareSideLength = 200; // Długość boku pola siatki to 200m
-            Battlefield battlefield = new Battlefield(gridSize, squareSideLength);
-            // Dodanie jednostek wojskowych z zasięgiem
-            battlefield.addMilitaryUnit(new SquareUnit(1, 4, 4, ConflictSide.RED, "Tank Division", 20, 500));
-            battlefield.addMilitaryUnit(new SquareUnit(2, 5, 5, ConflictSide.BLUE, "Infantry Brigade", 30, 300));
+        JFrame frame = new JFrame();
+        int gridSize = 50;
+        int squareSideLength = 200; // Długość boku pola siatki to 200m
+        Battlefield battlefield = new Battlefield(gridSize, squareSideLength);
+        // Dodanie jednostek wojskowych z zasięgiem
+        battlefield.addMilitaryUnit(new SquareUnit(1, 4, 4, ConflictSide.RED, "Tank Division", 20, 500));
+        battlefield.addMilitaryUnit(new SquareUnit(2, 5, 5, ConflictSide.BLUE, "Infantry Brigade", 30, 300));
 
-            // Pobieranie rozmiaru ekranu
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            int screenWidth = screenSize.width;
+        // Pobieranie rozmiaru ekranu
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int screenWidth = screenSize.width;
 
-            // Przyciski przybliżania i oddalania
-            JButton zoomInButton = new JButton("+");
-            JButton zoomOutButton = new JButton("-");
+        // Przyciski przybliżania i oddalania
+        JButton zoomInButton = new JButton("+");
+        JButton zoomOutButton = new JButton("-");
 
-            int buttonWidth = 50;
-            int buttonHeight = 50;
-            int gap = 10; // Odstęp między przyciskami
+        int buttonWidth = 50;
+        int buttonHeight = 50;
+        int gap = 10; // Odstęp między przyciskami
 
-            // Ustawienie rozmiaru i pozycji przycisków
-            zoomInButton.setBounds(screenWidth - buttonWidth - gap, gap, buttonWidth, buttonHeight);
-            zoomOutButton.setBounds(screenWidth - buttonWidth - gap, 2 * gap + buttonHeight, buttonWidth, buttonHeight);
+        // Ustawienie rozmiaru i pozycji przycisków
+        zoomInButton.setBounds(screenWidth - buttonWidth - gap, gap, buttonWidth, buttonHeight);
+        zoomOutButton.setBounds(screenWidth - buttonWidth - gap, 2 * gap + buttonHeight, buttonWidth, buttonHeight);
 
-            // Dodajemy akcje dla przycisków
-            zoomInButton.addActionListener(e -> battlefield.changeGridSize(-1));
-            zoomOutButton.addActionListener(e -> battlefield.changeGridSize(1));
+        // Dodajemy akcje dla przycisków
+        zoomInButton.addActionListener(e -> battlefield.changeGridSize(-1));
+        zoomOutButton.addActionListener(e -> battlefield.changeGridSize(1));
 
-            // Dodanie przycisków do panelu
-            battlefield.setLayout(null); // Usuwamy layout manager
-            battlefield.add(zoomInButton);
-            battlefield.add(zoomOutButton);
+        // Dodanie przycisków do panelu
+        battlefield.setLayout(null); // Usuwamy layout manager
+        battlefield.add(zoomInButton);
+        battlefield.add(zoomOutButton);
 
-            frame.add(battlefield);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.pack();
-            frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Pełny ekran
-            frame.setVisible(true);
+        frame.add(battlefield);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Pełny ekran
+        frame.setVisible(true);
 
 
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(1_000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    battlefield.moveUnit(1, 5, 4);
-                    battlefield.moveUnit(1, 6, 4);
-                    battlefield.moveUnit(1, 7, 4);
-                    battlefield.moveUnit(2, 5, 4);
-                    battlefield.moveUnit(2, 5, 3);
-                    battlefield.moveUnit(2, 5, 2);
-
-                    battlefield.hit(1, 3);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1_000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-            }).start();
+                battlefield.moveUnit(1, 5, 4);
+                battlefield.moveUnit(1, 6, 4);
+                battlefield.moveUnit(1, 7, 4);
+                battlefield.moveUnit(2, 5, 4);
+                battlefield.moveUnit(2, 5, 3);
+                battlefield.moveUnit(2, 5, 2);
+
+                battlefield.hit(1, 3);
+            }
+        }).start();
 
     }
 

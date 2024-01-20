@@ -42,7 +42,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
                     enemyUnit.setEquipmentQuantity(enemyUnit.getEquipmentQuantity() - combatUnit.getPower());
                 else
                     enemyUnit.setEquipmentQuantity(0);
-                drawHitGraphics();
+
                 hitLog();
 
                 //Wyniszczenie
@@ -59,7 +59,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
             Thread.sleep(200);
             combatUnit.getBattlefield()
                     .hit(
-                            combatUnit.getId().hashCode(),
+                            enemyUnit.getId().hashCode(),
                             combatUnit.getPower()
                     );
         } catch (InterruptedException e) {
@@ -146,6 +146,8 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
     }
 
     private void hitLog() {
+        drawHitGraphics();
+
         helper.getLog(combatUnit, combatUnit.simTimeFormatted(), String.format(
                 "hit the shot to id=%s side=%s eq=%d at (%d,%d) [X]",
                 combatUnit.getFocusedUnit().getId(),

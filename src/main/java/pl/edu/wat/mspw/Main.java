@@ -39,14 +39,13 @@ public class Main {
                 MovementDirection.EAST,
                 MovementDirection.EAST,
                 MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
+                MovementDirection.NORTH,
+                MovementDirection.NORTH,
+                MovementDirection.NORTH,
                 MovementDirection.EAST,
                 MovementDirection.EAST,
                 MovementDirection.EAST
+
         ));
 
 
@@ -61,10 +60,10 @@ public class Main {
 
         blueTeam.add(
                 CombatUnit.builder()
-                        .id("A")
+                        .id("Braun")
                         .x(20)
                         .y(20)
-                        .range(1000)
+                        .range(2000)
                         .fireRate(5)
                         .equipmentQuantity(20)
                         .velocity(40)
@@ -81,7 +80,7 @@ public class Main {
 
         redTeam.add(
                 CombatUnit.builder()
-                        .id("B")
+                        .id("Swiecznik")
                         .x(0)
                         .y(20)
                         .range(2000)
@@ -98,12 +97,6 @@ public class Main {
                         .battlefield(battlefield)
                         .build()
         );
-
-
-
-
-        CombatUnit red = redTeam.getFirst();
-        CombatUnit blue = redTeam.getFirst();
 
         for (CombatUnit combatUnit : redTeam) {
             battlefield.addMilitaryUnit(new SquareUnit(combatUnit.getId().hashCode(),
