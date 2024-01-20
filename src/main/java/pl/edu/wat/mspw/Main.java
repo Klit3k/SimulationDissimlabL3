@@ -2,15 +2,15 @@ package pl.edu.wat.mspw;
 
 import dissimlab.simcore.SimControlException;
 import dissimlab.simcore.SimManager;
-import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 import pl.edu.wat.mspw.enums.ConflictSide;
 import pl.edu.wat.mspw.enums.MovementDirection;
 import pl.edu.wat.mspw.event.MovementEvent;
 import pl.edu.wat.mspw.model.CombatUnit;
+import pl.edu.wat.mspw.ui.Battlefield;
 
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -62,8 +62,8 @@ public class Main {
         blueTeam.add(
                 CombatUnit.builder()
                         .id("A")
-                        .x(0)
-                        .y(0)
+                        .x(20)
+                        .y(20)
                         .range(3000)
                         .fireRate(5)
                         .equipmentQuantity(20)
@@ -96,7 +96,6 @@ public class Main {
         );
 
 
-        SimManager sm = SimManager.getInstance();
         for (CombatUnit combatUnit : redTeam) {
             new MovementEvent(combatUnit, combatUnit.computeTimeToMove());
         }
@@ -106,10 +105,13 @@ public class Main {
         }
 
 
-        sm.setEndSimTime(100);
 
-        sm.startSimulation();
+        SimManager sm = SimManager.getInstance();
 
+        CombatUnit red = redTeam.getFirst();
+        CombatUnit blue = redTeam.getFirst();
+
+        sm.setEndSimTime(20_000);
 
     }
 }
