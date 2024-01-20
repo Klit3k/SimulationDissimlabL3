@@ -1,5 +1,7 @@
 package pl.edu.wat.mspw;
 
+import dissimlab.monitors.Diagram;
+import dissimlab.monitors.Statistics;
 import dissimlab.simcore.SimControlException;
 import dissimlab.simcore.SimManager;
 import pl.edu.wat.mspw.enums.ConflictSide;
@@ -8,12 +10,14 @@ import pl.edu.wat.mspw.event.MovementEvent;
 import pl.edu.wat.mspw.model.CombatUnit;
 import pl.edu.wat.mspw.ui.Battlefield;
 import pl.edu.wat.mspw.ui.SquareUnit;
+import pl.edu.wat.mspw.util.Statistic;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
-    public static final int PAUSE_TIME = 250;
+    public static final int PAUSE_TIME = 10;
     static ArrayList<MovementDirection> blueMovementDirectionsArtillery = new ArrayList<>();
     static ArrayList<MovementDirection> blueMovementDirectionsInfantry = new ArrayList<>();
     static ArrayList<MovementDirection> blueMovementDirectionsTank = new ArrayList<>();
@@ -101,35 +105,35 @@ public class Main {
         //==============================================================================================================
 
         blueTeam.add(
-                unitBuilder("Tank", 10, 30, 4_000, 5, 20, 40, 50,
+                unitBuilder("Tank", 10, 30, 4_000, 7, 6, 40, 50,
                         0.6, 1, 0.6, blueMovementDirectionsTank, ConflictSide.BLUE)
         );
 
         blueTeam.add(
-                unitBuilder("Infantry", 25, 20, 1_000, 5, 20, 40, 50,
+                unitBuilder("Infantry", 25, 20, 1_000, 7, 6, 40, 50,
                         0.6, 1, 0.6, blueMovementDirectionsInfantry, ConflictSide.BLUE)
         );
 
         blueTeam.add(
-                unitBuilder("Artillery", 25, 40, 10_000, 5, 20, 40, 50,
+                unitBuilder("Artillery", 25, 40, 10_000, 6, 6, 40, 50,
                         0.6, 1, 0.6, blueMovementDirectionsArtillery, ConflictSide.BLUE)
         );
         //==============================================================================================================
         //                                          RED TEAM
         //==============================================================================================================
         redTeam.add(
-                unitBuilder("Tank", 25, 5, 4_000, 5, 20, 40, 1000,
+                unitBuilder("Tank", 25, 5, 4_000, 5, 5, 40, 1000,
                         0.6, 2, 0.6, redMovementDirectionsTank, ConflictSide.RED)
         );
 
         redTeam.add(
-                unitBuilder("Infantry", 5, 5, 1_000, 5, 20, 40, 1000,
+                unitBuilder("Infantry", 5, 5, 1_000, 5, 6, 40, 1000,
                         0.6, 2, 0.6, redMovementDirectionsInfantry, ConflictSide.RED)
         );
 
         redTeam.add(
-                unitBuilder("Artillery", 35, 5, 10_000, 5, 20, 40, 1000,
-                        1, 2, 1, redMovementDirectionsArtillery, ConflictSide.RED)
+                unitBuilder("Artillery", 35, 5, 10_000, 5, 2, 40, 1000,
+                        0.5, 2, 0.5, redMovementDirectionsArtillery, ConflictSide.RED)
         );
 
 
@@ -158,8 +162,11 @@ public class Main {
             ));
             new MovementEvent(combatUnit, combatUnit.computeTimeToMove());
         }
+        Statistic.initialize(redTeam.size(), blueTeam.size());
         sm.setEndSimTime(20_000);
         sm.startSimulation();
+
+        Statistic.summary();
     }
 
 

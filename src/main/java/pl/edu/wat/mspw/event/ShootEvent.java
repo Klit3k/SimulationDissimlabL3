@@ -7,6 +7,7 @@ import pl.edu.wat.mspw.CombatSystem;
 import pl.edu.wat.mspw.Main;
 import pl.edu.wat.mspw.model.CombatUnit;
 import pl.edu.wat.mspw.util.Helper;
+import pl.edu.wat.mspw.util.Statistic;
 
 
 public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
@@ -29,6 +30,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
 
     public void simulateAttack(double distance) throws SimControlException {
         shotLog();
+
         if (simulateShot(
                 combatSystem.getSideSquare(),
                 0,
@@ -39,6 +41,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
                 distance
         )) {
             if (combatUnit.getPropabilityOfDesctruction() >= rnGenerator.nextDouble()) {
+
                 if (enemyUnit.getEquipmentQuantity() >= combatUnit.getPower())
                     enemyUnit.setEquipmentQuantity(enemyUnit.getEquipmentQuantity() - combatUnit.getPower());
                 else
@@ -46,8 +49,9 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
 
 
                 //Wyniszczenie
-                if (enemyUnit.getEquipmentQuantity() == 0)
+                if (enemyUnit.getEquipmentQuantity() == 0) {
                     enemyUnit.setAlive(false);
+                }
                 hitLog();
 
 
@@ -140,6 +144,8 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
     }
 
     private void shotLog() {
+        Statistic.logUnitsQuantity(combatUnit);
+
         helper.getLog(combatUnit, combatUnit.simTimeFormatted(), String.format(
                 "shoots to id=%s side=%s eq=%d at (%d,%d)",
                 combatUnit.getFocusedUnit().getId(),
@@ -152,7 +158,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
 
     private void hitLog() {
         drawHitGraphics();
-
+        Statistic.logDestroyment(combatUnit, simTime());
         helper.getLog(combatUnit, combatUnit.simTimeFormatted(), String.format(
                 "hit the shot to id=%s side=%s eq=%d at (%d,%d) [X]",
                 combatUnit.getFocusedUnit().getId(),

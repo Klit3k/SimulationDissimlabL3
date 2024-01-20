@@ -2,8 +2,12 @@ package pl.edu.wat.mspw;
 
 import dissimlab.broker.INotificationEvent;
 import dissimlab.broker.IPublisher;
+import dissimlab.monitors.MonitoredVar;
 import dissimlab.simcore.BasicSimObj;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import pl.edu.wat.mspw.model.CombatUnit;
 
 import java.util.ArrayList;
@@ -12,16 +16,22 @@ import java.util.ArrayList;
 @Setter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class CombatSystem extends BasicSimObj {
 
-    /** Stan walczących jednostek strony Blue */
+
+    /**
+     * Stan walczących jednostek strony Blue
+     */
     private ArrayList<CombatUnit> combatUnitsBlue;
 
-    /** Stan walczących jednostek strony Red */
+    /**
+     * Stan walczących jednostek strony Red
+     */
     private ArrayList<CombatUnit> combatUnitsRed;
 
-    /** Rozmiar boku kwadratu w modelu terenu */
+    /**
+     * Rozmiar boku kwadratu w modelu terenu
+     */
     private int sideSquare;
 
     @Override

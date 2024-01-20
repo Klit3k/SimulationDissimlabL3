@@ -7,6 +7,7 @@ import pl.edu.wat.mspw.enums.ConflictSide;
 import pl.edu.wat.mspw.enums.MovementDirection;
 import pl.edu.wat.mspw.model.CombatUnit;
 import pl.edu.wat.mspw.util.Helper;
+import pl.edu.wat.mspw.util.Statistic;
 
 
 import java.util.List;
@@ -46,6 +47,7 @@ public class MovementEvent extends BasicSimEvent<CombatUnit, Object> {
     @Override
     protected void stateChange() throws SimControlException {
 //        makePause(250);
+        Statistic.logUnitsQuantity(combatUnit);
 
         if (combatUnit.isAlive() && !combatUnit.getRoute().isEmpty()) {
             this.updateLocation();
@@ -133,6 +135,7 @@ public class MovementEvent extends BasicSimEvent<CombatUnit, Object> {
             ));
         } else if (combatUnit.getCombatSystem().getCombatUnitsRed().isEmpty() &&
                 combatUnit.getCombatSystem().getCombatUnitsBlue().isEmpty()) {
+
             this.stopSimulation();
         }
     }

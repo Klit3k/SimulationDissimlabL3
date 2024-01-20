@@ -4,6 +4,7 @@ import dissimlab.simcore.BasicSimEvent;
 import dissimlab.simcore.SimControlException;
 import pl.edu.wat.mspw.model.CombatUnit;
 import pl.edu.wat.mspw.util.Helper;
+import pl.edu.wat.mspw.util.Statistic;
 
 
 public class DetectionEvent extends BasicSimEvent<CombatUnit, Object> {
@@ -17,6 +18,7 @@ public class DetectionEvent extends BasicSimEvent<CombatUnit, Object> {
 
     @Override
     protected void stateChange() throws SimControlException {
+
         if(combatUnit.isAlive()) {
             CombatUnit enemy = combatUnit.getFocusedUnit();
             if(enemy != null) {
