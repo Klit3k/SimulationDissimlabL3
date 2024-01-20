@@ -29,6 +29,19 @@ public class MovementEvent extends BasicSimEvent<CombatUnit, Object> {
             throw new RuntimeException(e);
         }
     }
+    private void drawMoveGraphic(int x, int y) {
+                try {
+                    Thread.sleep(200);
+                    combatUnit.getBattlefield()
+                            .moveUnit(
+                                    combatUnit.getId().hashCode(),
+                                    x,
+                                    y
+                            );
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+    }
     @Override
     protected void stateChange() throws SimControlException {
 //        makePause(250);
@@ -107,6 +120,8 @@ public class MovementEvent extends BasicSimEvent<CombatUnit, Object> {
                 case EAST -> combatUnit.setX(combatUnit.getX() + 1);
                 case WEST -> combatUnit.setX(combatUnit.getX() - 1);
             }
+
+            drawMoveGraphic(combatUnit.getX(), combatUnit.getY());
             helper.getLog(getSimObj(), getSimObj().simTimeFormatted(), String.format(
                     "move %s (%d,%d) -> (%d,%d)",
                     nextDirection,

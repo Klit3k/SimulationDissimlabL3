@@ -7,6 +7,7 @@ import lombok.*;
 import pl.edu.wat.mspw.CombatSystem;
 import pl.edu.wat.mspw.enums.ConflictSide;
 import pl.edu.wat.mspw.enums.MovementDirection;
+import pl.edu.wat.mspw.ui.Battlefield;
 
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class CombatUnit extends BasicSimObj {
     private double fireRate;
 
     /** Zasięg rażenia środków walki */
-    private float range;
+    private int range;
 
     /** Ilość sprzętu */
     private int equipmentQuantity;
@@ -48,6 +49,8 @@ public class CombatUnit extends BasicSimObj {
 
     private int power;
 
+    /** Prawdopodobienstwo zniszczenia jednym strzałem */
+    private double propabilityOfDesctruction;
     //===========================================
     private String id;
 
@@ -59,8 +62,7 @@ public class CombatUnit extends BasicSimObj {
     private boolean isDetected = false;
 
     private CombatUnit focusedUnit;
-
-
+    private Battlefield battlefield;
     private CombatSystem combatSystem;
 
 

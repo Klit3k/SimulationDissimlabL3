@@ -1,5 +1,6 @@
 package pl.edu.wat.mspw.event;
 
+import dissimlab.random.RNGenerator;
 import dissimlab.simcore.BasicSimEvent;
 import dissimlab.simcore.SimControlException;
 import pl.edu.wat.mspw.CombatSystem;
@@ -12,6 +13,8 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
     CombatUnit combatUnit;
     CombatSystem combatSystem;
     CombatUnit enemyUnit;
+    RNGenerator rnGenerator;
+
 
     public ShootEvent(CombatUnit combatUnit, CombatSystem combatSystem, double period) throws SimControlException {
         super(combatUnit, combatSystem, period);
@@ -19,6 +22,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
         this.combatUnit = combatUnit;
         this.combatSystem = combatSystem;
         this.enemyUnit = combatUnit.getFocusedUnit();
+        this.rnGenerator = new RNGenerator();
 
     }
 
@@ -33,21 +37,35 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
                 combatUnit.getSpread(),
                 distance
         )) {
+            if (combatUnit.getPropabilityOfDesctruction() >= rnGenerator.nextDouble()) {
+                if (enemyUnit.getEquipmentQuantity() >= combatUnit.getPower())
+                    enemyUnit.setEquipmentQuantity(enemyUnit.getEquipmentQuantity() - combatUnit.getPower());
+                else
+                    enemyUnit.setEquipmentQuantity(0);
+                drawHitGraphics();
+                hitLog();
 
-            if (enemyUnit.getEquipmentQuantity() >= combatUnit.getPower())
-                enemyUnit.setEquipmentQuantity(enemyUnit.getEquipmentQuantity() - combatUnit.getPower());
-             else
-                enemyUnit.setEquipmentQuantity(0);
-
-            hitLog();
-
-            //Wyniszczenie
-            if (combatUnit.getEquipmentQuantity() == 0 || enemyUnit.getEquipmentQuantity() == 0)
-                stopSimulation();
-
+                //Wyniszczenie
+                if (combatUnit.getEquipmentQuantity() == 0 || enemyUnit.getEquipmentQuantity() == 0)
+                    stopSimulation();
+            } else {
+                nonHitLog();
+            }
         } else nonHitLog();
     }
 
+    private void drawHitGraphics() {
+        try {
+            Thread.sleep(200);
+            combatUnit.getBattlefield()
+                    .hit(
+                            combatUnit.getId().hashCode(),
+                            combatUnit.getPower()
+                    );
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     protected void stateChange() throws SimControlException {
@@ -73,7 +91,11 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
         return this.eventParams;
     }
 
-    public static boolean simulateShot(double squareSize,
+    /**
+     * targetX, tragetY - punkty celowania;
+     * center1X, center1Y - środek celu
+     */
+    public boolean simulateShot(double squareSize,
                                        double center1X, double center1Y,
                                        double targetX, double targetY,
                                        double sigma, double distance) {
@@ -87,7 +109,7 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
         return isInsideSquare(hitX, hitY, squareSize, squareSize, center1X, center1Y);
     }
 
-    private static boolean isInsideSquare(double x, double y, double h, double w, double centerX, double centerY) {
+    private boolean isInsideSquare(double x, double y, double h, double w, double centerX, double centerY) {
         double halfH = h / 2.0;
         double halfW = w / 2.0;
         double minX = centerX - halfW;
@@ -98,16 +120,16 @@ public class ShootEvent extends BasicSimEvent<CombatUnit, CombatSystem> {
         return x >= minX && x <= maxX && y >= minY && y <= maxY;
     }
 
-    private static double generateRandomNormalX(double sigma, double distance) {
-        double u1 = Math.random();
-        double u2 = Math.random();
+    private double generateRandomNormalX(double sigma, double distance) {
+        double u1 = rnGenerator.nextDouble();
+        double u2 = rnGenerator.nextDouble();
 
         return Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2) * distance / sigma;
     }
 
-    private static double generateRandomNormalY(double sigma, double distance) {
-        double u1 = Math.random();
-        double u2 = Math.random();
+    private double generateRandomNormalY(double sigma, double distance) {
+        double u1 = rnGenerator.nextDouble();
+        double u2 = rnGenerator.nextDouble();
 
         return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2) * distance / sigma;
     }

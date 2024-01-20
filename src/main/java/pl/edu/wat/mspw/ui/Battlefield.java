@@ -51,16 +51,6 @@ public class Battlefield extends JPanel {
             repaint();
         }
     }
-    // Metoda do dodawania jednostek wojskowych
-    public void addMilitaryUnit(SquareUnit unit) {
-        if (unit != null) {
-            squareUnits.add(unit);
-            setColorAt(unit.getX(), unit.getY(), unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE);
-            repaint();
-        }
-    }
-
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -155,7 +145,14 @@ public class Battlefield extends JPanel {
         int textHeight = metrics.getHeight();
 
         // Rysowanie nazwy jednostki wyśrodkowanej w kwadracie
-        g.drawString(unitText, x + (squareSize - textWidth) / 2, y + (squareSize - textHeight) / 2 + metrics.getAscent());
+//        g.drawString(unitText, x + (squareSize - textWidth) / 2, y + (squareSize - textHeight) / 2 + metrics.getAscent());
+        drawCenteredString(g, unitText, new Rectangle(
+                x + (squareSize - textWidth) / 2,
+                        y + (squareSize - textHeight) / 2 + metrics.getAscent(),
+                        textWidth,
+                        squareSize - textHeight),
+                new Font("Arial", Font.BOLD, 12), Color.WHITE, Color.BLACK);
+
         g2d.dispose(); // Zwalnia zasoby Graphics2D
 
     }
@@ -206,10 +203,6 @@ public class Battlefield extends JPanel {
         }
     }
 
-
-
-
-
     // Metoda do tworzenia delikatniejszego odcienia koloru dla śladu
     private Color makeTrailColor(Color baseColor) {
         float[] hsbVals = Color.RGBtoHSB(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), null);
@@ -218,9 +211,87 @@ public class Battlefield extends JPanel {
     }
 
 
-
-    public static void main(String[] args) {
+    public Battlefield initalize() {
         SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame();
+            int gridSize = 50;
+            int squareSideLength = 200; // Długość boku pola siatki to 200m
+            Battlefield battlefield = new Battlefield(gridSize, squareSideLength);
+            // Dodanie jednostek wojskowych z zasięgiem
+            battlefield.addMilitaryUnit(new SquareUnit(1, 4, 4, ConflictSide.RED, "Tank Division", 20, 500));
+            battlefield.addMilitaryUnit(new SquareUnit(2, 5, 5, ConflictSide.BLUE, "Infantry Brigade", 30, 300));
+
+            // Pobieranie rozmiaru ekranu
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            int screenWidth = screenSize.width;
+
+            // Przyciski przybliżania i oddalania
+            JButton zoomInButton = new JButton("+");
+            JButton zoomOutButton = new JButton("-");
+
+            int buttonWidth = 50;
+            int buttonHeight = 50;
+            int gap = 10; // Odstęp między przyciskami
+
+            // Ustawienie rozmiaru i pozycji przycisków
+            zoomInButton.setBounds(screenWidth - buttonWidth - gap, gap, buttonWidth, buttonHeight);
+            zoomOutButton.setBounds(screenWidth - buttonWidth - gap, 2 * gap + buttonHeight, buttonWidth, buttonHeight);
+
+            // Dodajemy akcje dla przycisków
+            zoomInButton.addActionListener(e -> battlefield.changeGridSize(-1));
+            zoomOutButton.addActionListener(e -> battlefield.changeGridSize(1));
+
+            // Dodanie przycisków do panelu
+            battlefield.setLayout(null); // Usuwamy layout manager
+            battlefield.add(zoomInButton);
+            battlefield.add(zoomOutButton);
+
+            frame.add(battlefield);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.pack();
+            frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Pełny ekran
+            frame.setVisible(true);
+
+        });
+        return this;
+    }
+
+
+    public void hit(int unitId, int power) {
+        for (SquareUnit unit : squareUnits) {
+            if (unit.getId() == unitId) {
+                unit.setEquipmentCount(
+                        unit.getEquipmentCount()-power
+                );
+            }
+        }
+    }
+    // Metoda do dodawania jednostek wojskowych
+    public void addMilitaryUnit(SquareUnit unit) {
+        if (unit != null) {
+            squareUnits.add(unit);
+            setColorAt(unit.getX(), unit.getY(), unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE);
+            repaint();
+        }
+    }
+    private void drawCenteredString(Graphics g, String text, Rectangle rect, Font font, Color textColor, Color shadowColor) {
+        // Ustawienie czcionki i koloru
+        g.setFont(font);
+        FontMetrics metrics = g.getFontMetrics(font);
+
+        // Obliczanie pozycji tekstu, aby był wyśrodkowany w prostokącie
+        int x = rect.x + (rect.width - metrics.stringWidth(text)) / 2;
+        int y = rect.y + ((rect.height - metrics.getHeight()) / 2) + metrics.getAscent();
+
+        // Rysowanie cienia tekstu
+        g.setColor(shadowColor);
+        g.drawString(text, x + 1, y + 1); // Ustawienie lekkiego przesunięcia dla cienia
+
+        // Rysowanie tekstu
+        g.setColor(textColor);
+        g.drawString(text, x, y);
+    }
+    public static void main(String[] args) {
             JFrame frame = new JFrame();
             int gridSize = 50;
             int squareSideLength = 200; // Długość boku pola siatki to 200m
@@ -275,30 +346,68 @@ public class Battlefield extends JPanel {
                     battlefield.moveUnit(2, 5, 4);
                     battlefield.moveUnit(2, 5, 3);
                     battlefield.moveUnit(2, 5, 2);
+
+                    battlefield.hit(1, 3);
                 }
             }).start();
 
-        });
+    }
+
+    public Battlefield initialize() {
+        JFrame frame = new JFrame();
+        int gridSize = 50;
+        int squareSideLength = 200; // Długość boku pola siatki to 200m
+        Battlefield battlefield = new Battlefield(gridSize, squareSideLength);
+
+        // Pobieranie rozmiaru ekranu
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int screenWidth = screenSize.width;
+
+        // Przyciski przybliżania i oddalania
+        JButton zoomInButton = new JButton("+");
+        JButton zoomOutButton = new JButton("-");
+
+        int buttonWidth = 50;
+        int buttonHeight = 50;
+        int gap = 10; // Odstęp między przyciskami
+
+        // Ustawienie rozmiaru i pozycji przycisków
+        zoomInButton.setBounds(screenWidth - buttonWidth - gap, gap, buttonWidth, buttonHeight);
+        zoomOutButton.setBounds(screenWidth - buttonWidth - gap, 2 * gap + buttonHeight, buttonWidth, buttonHeight);
+
+        // Dodajemy akcje dla przycisków
+        zoomInButton.addActionListener(e -> battlefield.changeGridSize(-1));
+        zoomOutButton.addActionListener(e -> battlefield.changeGridSize(1));
+
+        // Dodanie przycisków do panelu
+        battlefield.setLayout(null); // Usuwamy layout manager
+        battlefield.add(zoomInButton);
+        battlefield.add(zoomOutButton);
+
+        frame.add(battlefield);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Pełny ekran
+        frame.setVisible(true);
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1_000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                battlefield.moveUnit(1, 5, 4);
+                battlefield.moveUnit(1, 6, 4);
+                battlefield.moveUnit(1, 7, 4);
+                battlefield.moveUnit(2, 5, 4);
+                battlefield.moveUnit(2, 5, 3);
+                battlefield.moveUnit(2, 5, 2);
+            }
+        }).start();
+        return battlefield;
     }
 }
 
-// Wewnętrzna klasa reprezentująca jednostki wojskowe
-@Getter @Setter
-class SquareUnit {
-    private int id; // Dodanie identyfikatora
-    private int x, y; // Pozycja na siatce
-    private ConflictSide side; // Strona konfliktu
-    private String name; // Nazwa jednostki
-    private int equipmentCount; // Ilość sprzętu
-    private int range;
-
-    public SquareUnit(int id, int x, int y, ConflictSide side, String name, int equipmentCount, int range) {
-        this.id = id; // Inicjalizacja identyfikatora
-        this.x = x;
-        this.y = y;
-        this.side = side;
-        this.name = name;
-        this.equipmentCount = equipmentCount;
-        this.range = range;
-    }
-}
