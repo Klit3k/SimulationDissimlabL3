@@ -10,92 +10,62 @@ import pl.edu.wat.mspw.ui.Battlefield;
 import pl.edu.wat.mspw.ui.SquareUnit;
 
 
-import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
+    static ArrayList<MovementDirection> blueMovementDirections = new ArrayList<>(Arrays.asList(
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST,
+            MovementDirection.WEST
+    ));
+    static ArrayList<MovementDirection> redMovementDirections = new ArrayList<>(Arrays.asList(
+            MovementDirection.EAST,
+            MovementDirection.EAST,
+            MovementDirection.EAST,
+            MovementDirection.EAST,
+            MovementDirection.EAST,
+            MovementDirection.NORTH,
+            MovementDirection.NORTH,
+            MovementDirection.NORTH,
+            MovementDirection.EAST,
+            MovementDirection.EAST,
+            MovementDirection.EAST
+
+    ));
+    static CombatSystem combatSystem;
+    static Battlefield battlefield;
     public static void main(String[] args) throws SimControlException {
         SimManager sm = SimManager.getInstance();
         ArrayList<CombatUnit> blueTeam = new ArrayList<>();
         ArrayList<CombatUnit> redTeam = new ArrayList<>();
-        ArrayList<MovementDirection> blueMovementDirections = new ArrayList<>(Arrays.asList(
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST,
-                MovementDirection.WEST
-        ));
-        ArrayList<MovementDirection> redMovementDirections = new ArrayList<>(Arrays.asList(
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.NORTH,
-                MovementDirection.NORTH,
-                MovementDirection.NORTH,
-                MovementDirection.EAST,
-                MovementDirection.EAST,
-                MovementDirection.EAST
-
-        ));
 
 
-        CombatSystem combatSystem = CombatSystem.builder()
+
+        combatSystem = CombatSystem.builder()
                 .sideSquare(20)
                 .combatUnitsBlue(blueTeam)
                 .combatUnitsRed(redTeam)
                 .build();
 
-        Battlefield battlefield = new Battlefield(20, combatSystem.getSideSquare())
+         battlefield = new Battlefield(20, combatSystem.getSideSquare())
                 .initialize();
 
         blueTeam.add(
-                CombatUnit.builder()
-                        .id("Braun")
-                        .x(20)
-                        .y(20)
-                        .range(2000)
-                        .fireRate(5)
-                        .equipmentQuantity(20)
-                        .velocity(40)
-                        .spread(50)
-                        .detectionRate(0.6)
-                        .power(1)
-                        .propabilityOfDesctruction(0.6)
-                        .route(blueMovementDirections)
-                        .conflictSide(ConflictSide.BLUE)
-                        .combatSystem(combatSystem)
-                        .battlefield(battlefield)
-                        .build()
+                unitBuilder("Braun", 20, 20, 2000, 5, 20, 40, 50, 0.6, 1, 0.6, blueMovementDirections, ConflictSide.BLUE)
         );
 
         redTeam.add(
-                CombatUnit.builder()
-                        .id("Swiecznik")
-                        .x(0)
-                        .y(20)
-                        .range(2000)
-                        .fireRate(5)
-                        .equipmentQuantity(20)
-                        .velocity(40)
-                        .spread(1000)
-                        .detectionRate(0.6)
-                        .power(2)
-                        .propabilityOfDesctruction(0.6)
-                        .route(redMovementDirections)
-                        .conflictSide(ConflictSide.RED)
-                        .combatSystem(combatSystem)
-                        .battlefield(battlefield)
-                        .build()
+
+                unitBuilder("Swiecznik", 0, 20, 2000, 5, 20, 40, 1000, 0.6, 2, 0.6, redMovementDirections, ConflictSide.RED)
         );
 
         for (CombatUnit combatUnit : redTeam) {
@@ -125,5 +95,26 @@ public class Main {
         sm.startSimulation();
     }
 
-
+    public static CombatUnit unitBuilder(String name, int x, int y, int range, double fireRate, int equipmentQuantity,
+                                         double velocity, double spread, double detectionRate, int power,
+                                         double propabilityOfDesctruction, ArrayList<MovementDirection> movementDirections,
+                                         ConflictSide side) {
+        return CombatUnit.builder()
+                .id(name)
+                .x(x)
+                .y(y)
+                .range(range)
+                .fireRate(fireRate)
+                .equipmentQuantity(equipmentQuantity)
+                .velocity(velocity)
+                .spread(spread)
+                .detectionRate(detectionRate)
+                .power(power)
+                .propabilityOfDesctruction(propabilityOfDesctruction)
+                .route(movementDirections)
+                .conflictSide(side)
+                .combatSystem(combatSystem)
+                .battlefield(battlefield)
+                .build();
+    }
 }
