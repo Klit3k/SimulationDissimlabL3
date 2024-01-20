@@ -15,6 +15,7 @@ public class Battlefield extends JPanel {
     private Color[][] gridColors; // Kolory kwadratów na siatce
     private List<SquareUnit> squareUnits; // Lista jednostek wojskowych na mapie
     private int squareSideLength; // Długość boku jednego pola siatki w metrach
+    private Color[][] trailColors; // Kolory śladów na siatce
 
     public Battlefield(int gridSize, int squareSideLength) {
         this.gridSize = gridSize;
@@ -23,23 +24,39 @@ public class Battlefield extends JPanel {
         setPreferredSize(Toolkit.getDefaultToolkit().getScreenSize());
         setLayout(null); // Usuwamy layout manager, aby móc umieścić przyciski
         this.squareSideLength = squareSideLength; // Inicjalizacja długości boku pola
+        this.trailColors = new Color[gridSize][gridSize]; // Inicjalizacja siatki śladów
 
     }
+    public void changeGridSize(int change) {
+        int newGridSize = gridSize + change;
 
+        // Sprawdzamy, czy nowy rozmiar siatki jest akceptowalny
+        if (newGridSize > 0) {
+
+            // Obliczamy początkowy indeks dla starej siatki, aby była ona wyśrodkowana na nowej
+            int startIndexX = (newGridSize - gridSize) / 2;
+            int startIndexY = (newGridSize - gridSize) / 2;
+
+            // Przesuwamy stare kolory do nowej, wyśrodkowanej siatki
+            for (int i = 0; i < gridSize; i++) {
+                for (int j = 0; j < gridSize; j++) {
+                    // Upewniamy się, że nie wychodzimy poza nowe wymiary siatki
+                    int newX = i + startIndexX;
+                    int newY = j + startIndexY;
+
+                }
+            }
+            gridSize = newGridSize;
+            revalidate();
+            repaint();
+        }
+    }
     // Metoda do dodawania jednostek wojskowych
     public void addMilitaryUnit(SquareUnit unit) {
         if (unit != null) {
             squareUnits.add(unit);
             setColorAt(unit.getX(), unit.getY(), unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE);
             repaint();
-        }
-    }
-
-    // Metoda do ustawiania koloru kwadratu
-    public void setColorAt(int x, int y, Color color) {
-        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
-            gridColors[x][y] = color;
-            repaint(); // Przerysuj komponent po zmianie koloru
         }
     }
 
@@ -80,6 +97,18 @@ public class Battlefield extends JPanel {
             }
         }
 
+        // Rysuj ślady
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                if (trailColors[i][j] != null) {
+                    int x = marginX + i * squareSize;
+                    int y = marginY + j * squareSize;
+                    g.setColor(trailColors[i][j]);
+                    g.fillRect(x, y, squareSize, squareSize);
+                }
+            }
+        }
+
         // Rysowanie jednostek wojskowych
         for (SquareUnit unit : squareUnits) {
             drawUnit(g, unit, squareSize, marginX, marginY);
@@ -115,7 +144,7 @@ public class Battlefield extends JPanel {
         // Rysuj obrys okręgu zasięgu
         g2d.drawOval(centerX - rangeRadius, centerY - rangeRadius, 2 * rangeRadius, 2 * rangeRadius);
 
-        //Rysuj jednostke
+        //Rysuj jednostek
         int x = marginX + unit.getX() * squareSize;
         int y = marginY + unit.getY() * squareSize;
 
@@ -132,42 +161,27 @@ public class Battlefield extends JPanel {
     }
 
 
-    public void changeGridSize(int change) {
-        int newGridSize = gridSize + change;
-
-        // Sprawdzamy, czy nowy rozmiar siatki jest akceptowalny
-        if (newGridSize > 0) {
-
-            // Obliczamy początkowy indeks dla starej siatki, aby była ona wyśrodkowana na nowej
-            int startIndexX = (newGridSize - gridSize) / 2;
-            int startIndexY = (newGridSize - gridSize) / 2;
-
-            // Przesuwamy stare kolory do nowej, wyśrodkowanej siatki
-            for (int i = 0; i < gridSize; i++) {
-                for (int j = 0; j < gridSize; j++) {
-                    // Upewniamy się, że nie wychodzimy poza nowe wymiary siatki
-                    int newX = i + startIndexX;
-                    int newY = j + startIndexY;
-
-                }
-            }
-            gridSize = newGridSize;
-            revalidate();
-            repaint();
-        }
-    }
-
     public void moveUnit(int unitId, int newX, int newY) {
         for (SquareUnit unit : squareUnits) {
             if (unit.getId() == unitId) {
-                // Usuń kolor starej pozycji
-                setColorAt(unit.getX(), unit.getY(), Color.WHITE);
+                int oldX = unit.getX();
+                int oldY = unit.getY();
 
                 // Zaktualizuj pozycję jednostki
                 unit.setX(newX);
                 unit.setY(newY);
 
-                // Ustaw kolor nowej pozycji
+
+                // Jeśli jednostka się przemieściła, ustaw ślad
+                if ((oldX != newX || oldY != newY) && !isOtherUnitOnPosition(unit.getId(),newX, newY)) {
+
+                        Color baseColor = unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE;
+                        Color trailColor = makeTrailColor(baseColor); // Metoda do tworzenia koloru śladu
+                        trailColors[oldX][oldY] = trailColor;
+
+                }
+
+                // Usuń ślad z nowej pozycji (jeśli istnieje) i ustaw kolor jednostki
                 setColorAt(newX, newY, unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE);
 
                 repaint();
@@ -175,6 +189,36 @@ public class Battlefield extends JPanel {
             }
         }
     }
+    private boolean isOtherUnitOnPosition(int id, int x, int y) {
+        for (SquareUnit unit : squareUnits) {
+            if (unit.getX() == x && unit.getY() == y && unit.getId() != id) {
+                return true; // Inna jednostka zajmuje tę pozycję
+            }
+        }
+        return false; // Brak innych jednostek na tej pozycji
+    }
+
+    public void setColorAt(int x, int y, Color color) {
+        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+            gridColors[x][y] = color; // Ustaw kolor jednostki
+            trailColors[x][y] = null; // Usuń ślad pod jednostką (jeśli istnieje)
+            repaint(); // Przerysuj komponent po zmianie koloru
+        }
+    }
+
+
+
+
+
+    // Metoda do tworzenia delikatniejszego odcienia koloru dla śladu
+    private Color makeTrailColor(Color baseColor) {
+        float[] hsbVals = Color.RGBtoHSB(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), null);
+        // Zwiększ jasność koloru i zastosuj niską przezroczystość
+        return new Color(Color.HSBtoRGB(hsbVals[0], hsbVals[1] * 0.5f, Math.min(1.0f, hsbVals[2] * 1.2f)), true);
+    }
+
+
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame();
@@ -182,8 +226,8 @@ public class Battlefield extends JPanel {
             int squareSideLength = 200; // Długość boku pola siatki to 200m
             Battlefield battlefield = new Battlefield(gridSize, squareSideLength);
             // Dodanie jednostek wojskowych z zasięgiem
-            battlefield.addMilitaryUnit(new SquareUnit(1, 1, 1, ConflictSide.RED, "Tank Division", 20, 500));
-            battlefield.addMilitaryUnit(new SquareUnit(2, 5, 10, ConflictSide.BLUE, "Infantry Brigade", 30, 300));
+            battlefield.addMilitaryUnit(new SquareUnit(1, 4, 4, ConflictSide.RED, "Tank Division", 20, 500));
+            battlefield.addMilitaryUnit(new SquareUnit(2, 5, 5, ConflictSide.BLUE, "Infantry Brigade", 30, 300));
 
             // Pobieranie rozmiaru ekranu
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -221,12 +265,16 @@ public class Battlefield extends JPanel {
                 @Override
                 public void run() {
                     try {
-                        Thread.sleep(5_000);
+                        Thread.sleep(1_000);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                    battlefield.moveUnit(1, 2, 1);
-                    battlefield.moveUnit(2, 5, 11);
+                    battlefield.moveUnit(1, 5, 4);
+                    battlefield.moveUnit(1, 6, 4);
+                    battlefield.moveUnit(1, 7, 4);
+                    battlefield.moveUnit(2, 5, 4);
+                    battlefield.moveUnit(2, 5, 3);
+                    battlefield.moveUnit(2, 5, 2);
                 }
             }).start();
 
@@ -243,6 +291,7 @@ class SquareUnit {
     private String name; // Nazwa jednostki
     private int equipmentCount; // Ilość sprzętu
     private int range;
+
     public SquareUnit(int id, int x, int y, ConflictSide side, String name, int equipmentCount, int range) {
         this.id = id; // Inicjalizacja identyfikatora
         this.x = x;
