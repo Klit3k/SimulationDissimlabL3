@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
-    public static final int PAUSE_TIME = 10;
+    public static final int PAUSE_TIME = 250;
     static ArrayList<MovementDirection> blueMovementDirectionsArtillery = new ArrayList<>();
     static ArrayList<MovementDirection> blueMovementDirectionsInfantry = new ArrayList<>();
     static ArrayList<MovementDirection> blueMovementDirectionsTank = new ArrayList<>();
@@ -140,7 +140,8 @@ public class Main {
                     ConflictSide.RED,
                     combatUnit.getId(),
                     combatUnit.getEquipmentQuantity(),
-                    combatUnit.getRange()
+                    combatUnit.getRange(),
+                    combatUnit.getPower()
             ));
             new MovementEvent(combatUnit, combatUnit.computeTimeToMove());
         }
@@ -152,7 +153,8 @@ public class Main {
                     ConflictSide.BLUE,
                     combatUnit.getId(),
                     combatUnit.getEquipmentQuantity(),
-                    combatUnit.getRange()
+                    combatUnit.getRange(),
+                    combatUnit.getPower()
             ));
             new MovementEvent(combatUnit, combatUnit.computeTimeToMove());
         }

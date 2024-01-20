@@ -3,33 +3,124 @@ package pl.edu.wat.mspw.ui;
 import pl.edu.wat.mspw.enums.ConflictSide;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Battlefield extends JPanel {
+    private final int startGridSize;
     private int gridSize; // Rozmiar siatki, np. 10x10
     private Color[][] gridColors; // Kolory kwadratów na siatce
     private List<SquareUnit> squareUnits; // Lista jednostek wojskowych na mapie
     private int squareSideLength; // Długość boku jednego pola siatki w metrach
     private Color[][] trailColors; // Kolory śladów na siatce
+    private DefaultTableModel redTeamTableModel;
+    private DefaultTableModel blueTeamTableModel;
+    private JTable redTeamTable;
+    private JTable blueTeamTable;
+    JPanel buttonPanel;
+    JButton zoomInButton;
+    JButton zoomOutButton;
 
     public Battlefield(int gridSize, int squareSideLength) {
         this.gridSize = gridSize;
+        this.startGridSize = gridSize;
         this.gridColors = new Color[gridSize][gridSize];
         this.squareUnits = new ArrayList<>();
         setPreferredSize(Toolkit.getDefaultToolkit().getScreenSize());
-        setLayout(null); // Usuwamy layout manager, aby móc umieścić przyciski
         this.squareSideLength = squareSideLength; // Inicjalizacja długości boku pola
         this.trailColors = new Color[gridSize][gridSize]; // Inicjalizacja siatki śladów
 
+        setLayout(new BorderLayout());
+
+
+        DefaultTableModel nonEditableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Equipment", "Power", "Range"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Zwraca false, co oznacza, że żadna komórka nie może być edytowana
+                return false;
+            }
+        };
+        DefaultTableModel nonEditableModel2 = new DefaultTableModel(new Object[]{"ID", "Name", "Equipment", "Power", "Range"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Zwraca false, co oznacza, że żadna komórka nie może być edytowana
+                return false;
+            }
+        };
+        // Inicjalizacja modeli tabeli dla obu drużyn
+        redTeamTableModel = nonEditableModel2;
+        blueTeamTableModel = nonEditableModel;
+
+        // Tworzenie tabel na podstawie modeli
+        redTeamTable = new JTable(redTeamTableModel);
+        blueTeamTable = new JTable(blueTeamTableModel);
+
+        TableColumnModel tableColumnRed = redTeamTable.getColumnModel();
+        tableColumnRed.removeColumn(tableColumnRed.getColumn(0));
+
+        TableColumnModel tableColumnBlue = blueTeamTable.getColumnModel();
+        tableColumnBlue.removeColumn(tableColumnBlue.getColumn(0));
+
+        // Tworzenie przewijanych paneli dla tabel
+        JScrollPane redScrollPane = new JScrollPane(redTeamTable);
+        JScrollPane blueScrollPane = new JScrollPane(blueTeamTable);
+
+        // Panel boczny na tabele
+        JPanel sidePanel = new JPanel(new GridLayout(2, 1)); // 2 wiersze, 1 kolumna
+        sidePanel.add(redScrollPane);
+        sidePanel.add(blueScrollPane);
+
+        // Ustawienie preferowanego rozmiaru dla panelu bocznego
+        sidePanel.setPreferredSize(new Dimension(300, 0)); // szerokość 200 pikseli
+
+
+        // Dodanie panelu bocznego do głównego panelu
+        add(sidePanel, BorderLayout.WEST);
+
+        // Panel na przyciski
+        buttonPanel = new JPanel(new GridLayout(2, 1));
+
+        zoomInButton = new JButton("+");
+        zoomOutButton = new JButton("-");
+
+        int buttonWidth = 50;
+        int buttonHeight = 50;
+        int gap = 10; // Odstęp między przyciskami
+        // Ustawienie rozmiaru i pozycji przycisków
+        // Pobieranie rozmiaru ekranu
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int screenWidth = screenSize.width;
+
+        zoomInButton.setBounds(screenWidth - buttonWidth - gap, gap, buttonWidth, buttonHeight);
+        zoomOutButton.setBounds(screenWidth - buttonWidth - gap, 2 * gap + buttonHeight, buttonWidth, buttonHeight);
+
+        buttonPanel.add(zoomInButton);
+        buttonPanel.add(zoomOutButton);
+
+        // Dodajemy akcje dla przycisków
+        zoomInButton.addActionListener(e -> this.changeGridSize(-1));
+        zoomOutButton.addActionListener(e -> this.changeGridSize(1));
+
+        // Dodanie panelu bocznego i przycisków do głównego panelu
+        add(sidePanel, BorderLayout.WEST);
+        add(buttonPanel, BorderLayout.EAST);
+    }
+
+    public void addUnitToTeam(SquareUnit unit) {
+        DefaultTableModel model = unit.getSide() == ConflictSide.RED ? redTeamTableModel : blueTeamTableModel;
+
+        model.addRow(new Object[]{unit.getId(), unit.getName(), unit.getEquipmentCount(), unit.getPower(), unit.getStartRange()});
     }
 
     public void changeGridSize(int change) {
         int newGridSize = gridSize + change;
 
         // Sprawdzamy, czy nowy rozmiar siatki jest akceptowalny
-        if (newGridSize > 0) {
+        if (newGridSize > 0 && newGridSize <= startGridSize) {
 
             // Obliczamy początkowy indeks dla starej siatki, aby była ona wyśrodkowana na nowej
             int startIndexX = (newGridSize - gridSize) / 2;
@@ -67,6 +158,7 @@ public class Battlefield extends JPanel {
         // Wypełnij tło
         g.setColor(getBackground());
         g.fillRect(0, 0, getWidth(), getHeight());
+
 
         // Rysuj kwadraty
         for (int i = 0; i < gridSize; i++) {
@@ -120,7 +212,7 @@ public class Battlefield extends JPanel {
 
         if (unit.getEquipmentCount() != 0) {
             // Oblicz promień okręgu zasięgu
-            int rangeRadius = (unit.getRange() / squareSideLength) ;
+            int rangeRadius = (unit.getRange() / squareSideLength);
 
             // Oblicz środek kwadratu jednostki
             int centerX = marginX + unit.getX() * squareSize + squareSize / 2;
@@ -214,6 +306,31 @@ public class Battlefield extends JPanel {
     }
 
 
+    public void updateTable() {
+        // Załóżmy, że mamy tabelę i model zainicjalizowane wcześniej
+        DefaultTableModel modelRed = redTeamTableModel;
+        DefaultTableModel modelBlue = blueTeamTableModel;
+
+        for(int i = 0; i < modelRed.getRowCount(); i++) {
+            for (SquareUnit unit:
+                 squareUnits) {
+                if(modelRed.getValueAt(i, 0).toString().equals(String.valueOf(unit.getId()))) {
+                    modelRed.setValueAt(unit.getEquipmentCount(), i, 2);
+                }
+            }
+        }
+        for(int i = 0; i < modelBlue.getRowCount(); i++) {
+            for (SquareUnit unit:
+                 squareUnits) {
+                if(modelBlue.getValueAt(i, 0).toString().equals(String.valueOf(unit.getId()))) {
+                    modelBlue.setValueAt(unit.getEquipmentCount(), i, 2);
+                }
+            }
+        }
+
+
+    }
+
     public void hit(int unitId, int power) {
         for (SquareUnit unit : squareUnits) {
             if (unit.getId() == unitId && unit.getEquipmentCount() > 0) {
@@ -221,7 +338,7 @@ public class Battlefield extends JPanel {
                 unit.setEquipmentCount(
                         unit.getEquipmentCount() - power
                 );
-
+                updateTable();
                 repaint();
             }
         }
@@ -230,6 +347,7 @@ public class Battlefield extends JPanel {
     // Metoda do dodawania jednostek wojskowych
     public void addMilitaryUnit(SquareUnit unit) {
         if (unit != null) {
+            addUnitToTeam(unit);
             squareUnits.add(unit);
             setColorAt(unit.getX(), unit.getY(), unit.getSide() == ConflictSide.RED ? Color.RED : Color.BLUE);
             repaint();
@@ -254,96 +372,9 @@ public class Battlefield extends JPanel {
         g.drawString(text, x, y);
     }
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame();
-        int gridSize = 50;
-        int squareSideLength = 200; // Długość boku pola siatki to 200m
-        Battlefield battlefield = new Battlefield(gridSize, squareSideLength);
-        // Dodanie jednostek wojskowych z zasięgiem
-        battlefield.addMilitaryUnit(new SquareUnit(1, 4, 4, ConflictSide.RED, "Tank Division", 20, 500));
-        battlefield.addMilitaryUnit(new SquareUnit(2, 5, 5, ConflictSide.BLUE, "Infantry Brigade", 30, 300));
-
-        // Pobieranie rozmiaru ekranu
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenWidth = screenSize.width;
-
-        // Przyciski przybliżania i oddalania
-        JButton zoomInButton = new JButton("+");
-        JButton zoomOutButton = new JButton("-");
-
-        int buttonWidth = 50;
-        int buttonHeight = 50;
-        int gap = 10; // Odstęp między przyciskami
-
-        // Ustawienie rozmiaru i pozycji przycisków
-        zoomInButton.setBounds(screenWidth - buttonWidth - gap, gap, buttonWidth, buttonHeight);
-        zoomOutButton.setBounds(screenWidth - buttonWidth - gap, 2 * gap + buttonHeight, buttonWidth, buttonHeight);
-
-        // Dodajemy akcje dla przycisków
-        zoomInButton.addActionListener(e -> battlefield.changeGridSize(-1));
-        zoomOutButton.addActionListener(e -> battlefield.changeGridSize(1));
-
-        // Dodanie przycisków do panelu
-        battlefield.setLayout(null); // Usuwamy layout manager
-        battlefield.add(zoomInButton);
-        battlefield.add(zoomOutButton);
-
-        frame.add(battlefield);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Pełny ekran
-        frame.setVisible(true);
-
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(1_000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                battlefield.moveUnit(1, 5, 4);
-                battlefield.moveUnit(1, 6, 4);
-                battlefield.moveUnit(1, 7, 4);
-                battlefield.moveUnit(2, 5, 4);
-                battlefield.moveUnit(2, 5, 3);
-                battlefield.moveUnit(2, 5, 2);
-
-                battlefield.hit(1, 3);
-            }
-        }).start();
-
-    }
-
     public Battlefield initialize() {
         JFrame frame = new JFrame();
         Battlefield battlefield = new Battlefield(gridSize, squareSideLength);
-
-        // Pobieranie rozmiaru ekranu
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenWidth = screenSize.width;
-
-        // Przyciski przybliżania i oddalania
-        JButton zoomInButton = new JButton("+");
-        JButton zoomOutButton = new JButton("-");
-
-        int buttonWidth = 50;
-        int buttonHeight = 50;
-        int gap = 10; // Odstęp między przyciskami
-
-        // Ustawienie rozmiaru i pozycji przycisków
-        zoomInButton.setBounds(screenWidth - buttonWidth - gap, gap, buttonWidth, buttonHeight);
-        zoomOutButton.setBounds(screenWidth - buttonWidth - gap, 2 * gap + buttonHeight, buttonWidth, buttonHeight);
-
-        // Dodajemy akcje dla przycisków
-        zoomInButton.addActionListener(e -> battlefield.changeGridSize(-1));
-        zoomOutButton.addActionListener(e -> battlefield.changeGridSize(1));
-
-        // Dodanie przycisków do panelu
-        battlefield.setLayout(null); // Usuwamy layout manager
-        battlefield.add(zoomInButton);
-        battlefield.add(zoomOutButton);
 
         frame.add(battlefield);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
